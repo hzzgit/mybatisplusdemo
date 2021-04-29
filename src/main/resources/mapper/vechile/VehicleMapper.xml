@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hzz.mybatisplusdemo.vechile.mapper.VehicleMapper">
+
+    <select id="selectvehicle" parameterType="java.util.HashMap" resultType="com.hzz.mybatisplusdemo.vechile.entity.Vehicle">
+        select
+         <include refid="Base_Column_List" />
+          from vehicle
+        where 1=1
+
+    </select>
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.hzz.mybatisplusdemo.vechile.entity.Vehicle">
+        <id column="vehicleId" property="vehicleid" />
+        <result column="createDate" property="createdate" />
+        <result column="deleted" property="deleted" />
+        <result column="owner" property="owner" />
+        <result column="remark" property="remark" />
+        <result column="buyTime" property="buytime" />
+        <result column="depId" property="depid" />
+        <result column="depName" property="depname" />
+        <result column="driver" property="driver" />
+        <result column="driverMobile" property="drivermobile" />
+        <result column="gpsTerminalType" property="gpsterminaltype" />
+        <result column="industry" property="industry" />
+        <result column="installDate" property="installdate" />
+        <result column="lastCheckTime" property="lastchecktime" />
+        <result column="memberId" property="memberid" />
+        <result column="monitor" property="monitor" />
+        <result column="monitorMobile" property="monitormobile" />
+        <result column="motorID" property="motorid" />
+        <result column="offlineTime" property="offlinetime" />
+        <result column="onlineTime" property="onlinetime" />
+        <result column="operPermit" property="operpermit" />
+        <result column="plateColor" property="platecolor" />
+        <result column="plateNo" property="plateno" />
+        <result column="region" property="region" />
+        <result column="routes" property="routes" />
+        <result column="runStatus" property="runstatus" />
+        <result column="simNo" property="simno" />
+        <result column="status" property="status" />
+        <result column="termId" property="termid" />
+        <result column="useType" property="usetype" />
+        <result column="vehicleType" property="vehicletype" />
+        <result column="vendor" property="vendor" />
+        <result column="videoDeviceId" property="videodeviceid" />
+        <result column="endDate" property="enddate" />
+        <result column="startDate" property="startdate" />
+        <result column="workHour" property="workhour" />
+        <result column="buyDate" property="buydate" />
+        <result column="engineNo" property="engineno" />
+        <result column="frameNo" property="frameno" />
+        <result column="manufacture" property="manufacture" />
+        <result column="modelNo" property="modelno" />
+        <result column="photo" property="photo" />
+        <result column="companyId" property="companyid" />
+        <result column="videoChannelNum" property="videochannelnum" />
+        <result column="UserName" property="username" />
+        <result column="VideoDataType" property="videodatatype" />
+        <result column="ChannelId" property="channelid" />
+        <result column="videoDisk" property="videodisk" />
+        <result column="videoChannelNames" property="videochannelnames" />
+        <result column="flowRateNo" property="flowrateno" />
+        <result column="vehiclePassWord" property="vehiclepassword" />
+        <result column="superTransType" property="supertranstype" />
+        <result column="seatingCapacity" property="seatingcapacity" />
+        <result column="transserialno" property="transserialno" />
+        <result column="routeName" property="routename" />
+        <result column="serviceStartDate" property="servicestartdate" />
+        <result column="serviceEndDate" property="serviceenddate" />
+        <result column="mileageAdjustment" property="mileageadjustment" />
+        <result column="fuelConsumption" property="fuelconsumption" />
+        <result column="updateDate" property="updatedate" />
+        <result column="updateStaff" property="updatestaff" />
+        <result column="createStaff" property="createstaff" />
+        <result column="vehicleManufacturer" property="vehiclemanufacturer" />
+        <result column="inLineDate" property="inlinedate" />
+        <result column="synchronizedDate" property="synchronizeddate" />
+        <result column="operatorId" property="operatorid" />
+        <result column="protocol_version" property="protocolVersion" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        vehicleId, createDate, deleted, owner, remark, buyTime, depId, depName, driver, driverMobile, gpsTerminalType, industry, installDate, lastCheckTime, memberId, monitor, monitorMobile, motorID, offlineTime, onlineTime, operPermit, plateColor, plateNo, region, routes, runStatus, simNo, status, termId, useType, vehicleType, vendor, videoDeviceId, endDate, startDate, workHour, buyDate, engineNo, frameNo, manufacture, modelNo, photo, companyId, videoChannelNum, UserName, VideoDataType, ChannelId, videoDisk, videoChannelNames, flowRateNo, vehiclePassWord, superTransType, seatingCapacity, transserialno, routeName, serviceStartDate, serviceEndDate, mileageAdjustment, fuelConsumption, updateDate, updateStaff, createStaff, vehicleManufacturer, inLineDate, synchronizedDate, operatorId, protocol_version
+    </sql>
+
+</mapper>

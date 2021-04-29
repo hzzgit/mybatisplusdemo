@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hzz.mybatisplusdemo.board.mapper.BoardMapper">
+
+    <!--司机驾驶行为评定  -->
+    <select id="selectdriverevaluation" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        select w.driverName,d.depId,d.name depName,w.vehicleId,w.type6cn onlineco,w.type44cn
+        qingxin,(w.type45cn+w.type46cn) zhuanzhu,
+        w.type41cn guifan,(w.type42cn+w.type43cn) jingti from
+        gps_hisdata.driverstatisticsbyweek w, department d
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on w.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on w.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+        where 1=1 and w.depId =d.depId
+        <if test="startTime != null ">
+            and w.time = #{startTime}
+        </if>
+        <if test="depIdList != null and vehicleIdList == null and userId == null">
+            and w.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null and userId == null">
+            and w.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (w.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or w.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <!--企业安全风险等级  -->
+    <select id="selectdeprisk" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        select * from (
+        select v.cn depcn, w.depId,d.name depName,w.score ,ifnull(e.score,'未运营') score2 from (
+        select depId,score from gps_hisdata.logisticsstatisticsresultbydepbyweek
+        where 1=1
+        <if test="startTime != null ">
+            and time = #{startTime}
+        </if>
+        <if test="depIdList != null ">
+            and depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        )
+        w left join
+        ( select count(1) cn,depId from vehicle where deleted =false group by depId) v on w.depId=v.depId left join
+        department d
+        on w.depId =d.depId left join (
+        select depId,score from gps_hisdata.logisticsstatisticsresultbydepbyweek
+        where 1=1
+
+        <if test="endTime != null ">
+            and time = #{endTime}
+        </if>
+        <if test="depIdList != null">
+            and depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        ) e on w.depId=e.depId
+        where 1=1
+        ) c1
+        order by score asc
+
+    </select>
+
+    <!-- 查询最新的报警 -->
+    <select id="selectLatestAlarms" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        select a.id,a.firstTime,a.lastTime as alarmTime,
+        a.vehicleId,
+        a.alarmType
+        from gps_hisData.alarm_summary a,
+        vehicle v
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on v.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on v.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+        where
+        a.vehicleId = v.vehicleId
+        <![CDATA[   	AND  a.`firstTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -2 DAY)  ]]>
+        <![CDATA[   	AND  a.`firstTime` <  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL 1 DAY)  ]]>
+
+        <if test="startTime != null ">
+            and a.lastTime >= #{startTime}
+        </if>
+        <if test="endTime != null ">
+            and <![CDATA[a.lastTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+        </if>
+
+        <if test="depIdList != null and vehicleIdList == null and userId == null">
+            and v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null and userId == null">
+            and v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        order by a.lastTime desc limit 0,100
+    </select>
+
+
+    <!-- 报警数查询、根据未处理。已处理和全部 -->
+    <select id="selectalarmco" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        select count(*) cn from gps_hisdata.alarm_summary a , vehicle v
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on v.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on v.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+
+        where a.vehicleId=v.vehicleId
+        and v.deleted=false
+        <if test="processed ==0">
+            AND a.processed=0
+        </if>
+        <if test="processed ==1">
+            AND a.processed>0
+        </if>
+
+        <if test="startTime != null ">
+            and a.firstTime >= date_add(#{startTime},INTERVAL -3 DAY)
+        </if>
+        <if test="endTime != null ">
+            and <![CDATA[a.firstTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+        </if>
+
+        <if test="startTime != null ">
+            and a.lastTime >= #{startTime}
+        </if>
+        <if test="endTime != null ">
+            and <![CDATA[a.lastTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+        </if>
+
+
+        <if test="depIdList != null and vehicleIdList == null and userId == null">
+            and v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null and userId == null">
+            and v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+    </select>
+
+
+    <!-- 管路员专属看板新需求，查询近六个月报警数量 -->
+    <select id="selectalarmbymonthadmin" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+      SELECT time TIME,sum(co) cn FROM alarmingtrend a left join vehicle v on a.vehicleId=v.vehicleId
+        WHERE a.time  > date_format(DATE_ADD(NOW(),INTERVAL -7 MONTH),'%Y-%m')
+          GROUP BY a.time
+    </select>
+
+    <!-- 看板新需求，查询近六个月报警数量 -->
+    <select id="selectalarmbymonth" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT time TIME,sum(co) cn FROM alarmingtrend a left join vehicle v on a.vehicleId=v.vehicleId
+        WHERE a.time > date_format(DATE_ADD(NOW(),INTERVAL -7 MONTH),'%Y-%m')
+        <if test="depIdList != null and vehicleIdList == null">
+            and v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null">
+            and v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        GROUP BY a.time
+    </select>
+
+
+    <!-- 车辆总数查询 -->
+    <select id="selectcountbyvehicle" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT COUNT(1) cn FROM vehicle v inner join department d on v.depId=d.depId WHERE v.`deleted`=FALSE
+        and d.deleted=false
+        <if test="depIdList != null and vehicleIdList == null">
+            and v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null">
+            and v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <!-- 在线车辆数查询 -->
+    <select id="selectcountbyonlinevehicle" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT COUNT(*) cn FROM gpsrealdata WHERE online =TRUE
+        AND  <![CDATA[  NOW()-onlineDate <610 ]]>
+        <if test="depIdList != null and vehicleIdList == null">
+            and v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null">
+            and v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+
+
+    </select>
+
+    <!--行驶总里程数 -->
+    <select id="selectsummileagebyvehicle" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT IFNULL(SUM(mileage),0) cn FROM fuelconsumption a LEFT JOIN vehicle b ON a.`plateNo`=b.`plateNo`
+        <where>
+            <if test="datetime != 0">
+                and <![CDATA[  TO_DAYS( NOW( ) ) - TO_DAYS( a.createDate) <= #{datetime} ]]>
+            </if>
+            <if test="depIdList != null and vehicleIdList == null">
+                and v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vehicleIdList != null and depIdList == null">
+                and v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="vehicleIdList != null and depIdList != null">
+                and (v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                or v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+            and a.mileage >0
+        </where>
+    </select>
+
+    <!--报警数最近几天的 -->
+    <select id="selectcountbyalarm" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT COUNT(*) cn FROM gps_hisdata.alarm_summary a LEFT JOIN
+        vehicle v ON a.vehicleid=v.vehicleid
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on v.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on v.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+
+        <where>
+        and v.deleted=false
+            <![CDATA[   	AND  a.`firstTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -10 DAY)  ]]>
+            <![CDATA[   	AND  a.`firstTime` <  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL 1 DAY)  ]]>
+
+            <if test="datetime != 0">
+                <![CDATA[   	AND  a.`lastTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -${datetime} DAY)  ]]>
+            </if>
+            <if test="depIdList != null and vehicleIdList == null and userId == null">
+                and v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vehicleIdList != null and depIdList == null and userId == null">
+                and v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="vehicleIdList != null and depIdList != null">
+                and (v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                or v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+
+        </where>
+    </select>
+
+    <!--全国车辆热力地图分布 -->
+
+    <select id="selectcountvehiclebymap" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT REPLACE(REPLACE( REPLACE(REPLACE( REPLACE(REPLACE(
+        REPLACE(a1.name,'省',''),'自治区',''),'市',''),'壮族',''),'维吾尔',''),'特别行政区','') ,'回族','')
+        NAME ,IFNULL(d2.cn ,0) cn FROM (SELECT NAME , 0 cn FROM region WHERE LEVEL =2) a1 LEFT JOIN
+        ( SELECT * FROM ( SELECT c.name NAME,a2.cn FROM
+        ( SELECT CONCAT(LEFT(a.region,2),'0000') NAME ,COUNT(*) cn FROM vehicle v LEFT JOIN department a ON
+        v.`depId`=a.`depId`
+        <where>
+            and v.deleted=false
+            and a.deleted=false
+            <!--<if test="datetime != 0">-->
+            <!--and <![CDATA[  TO_DAYS( NOW( ) ) - TO_DAYS( v.createDate) >= #{datetime} ]]>-->
+            <!--</if>-->
+            <if test="depIdList != null and vehicleIdList == null">
+                and v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vehicleIdList != null and depIdList == null">
+                and v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="vehicleIdList != null and depIdList != null">
+                and (v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                or v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+        </where>
+        GROUP BY LEFT(a.region,2) ) a2
+        LEFT JOIN
+        region c
+        ON c.code=a2.NAME ) d1 WHERE NAME IS NOT NULL ) d2 ON a1.name=d2.name
+    </select>
+
+    <!--查询在线车辆机构分布-->
+    <select id="selectonlinevehiclebydep" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT DATE_FORMAT(o.createDate,'%Y-%m-%d') TIME ,o.depName name , IFNULL(o.onlineNum,0) cn
+        FROM onlinestatistic o left join vehicle v on o.depId=v.depId
+        WHERE o.createDate IN (
+        SELECT MAX(createDate) maxdate FROM onlinestatistic
+        WHERE 1=1
+        AND onlineNum >0
+        GROUP BY DATE_FORMAT(createDate,'%Y-%m-%d') ORDER BY createDate DESC)
+        AND IFNULL(o.onlineNum,0)>0
+        <if test="datetime != 0">
+            <![CDATA[   AND TO_DAYS( NOW( ) ) - TO_DAYS(o.createDate) <= #{datetime}  ]]>
+        </if>
+        <if test="depIdList != null and vehicleIdList == null">
+            and v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="vehicleIdList != null and depIdList == null">
+            and v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="vehicleIdList != null and depIdList != null">
+            and (v.depId in
+            <foreach
+                    collection="depIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            or v.vehicleId in
+            <foreach
+                    collection="vehicleIdList" index="index" item="item"
+                    open="(" separator="," close=")">
+                #{item}
+            </foreach>
+            )
+        </if>
+        AND o.depName IS NOT NULL
+        ORDER BY TIME DESC, o.onlineNum desc
+    </select>
+
+
+    <!--车辆报警排行-->
+    <select id="selectalarmcountbyvehicle" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        SELECT * FROM (SELECT COUNT(1) cn,plateNo, NAME FROM ( SELECT v.`plateNo`,d.`name` FROM
+        gps_hisdata.alarm_summary a
+        LEFT
+        JOIN
+        vehicle v ON a.vehicleId=v.vehicleId LEFT JOIN department d ON v.depId= d.`depId`
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on v.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on v.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+
+
+        <where>
+            <![CDATA[   	AND  a.`firstTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -2 DAY)  ]]>
+            <if test="startTime != null ">
+                and a.lastTime >= #{startTime}
+            </if>
+            <if test="endTime != null ">
+                and <![CDATA[a.lastTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+                and <![CDATA[a.firstTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+            </if>
+            <if test="depIdList != null and vehicleIdList == null and userId == null">
+                and v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vehicleIdList != null and depIdList == null and userId == null">
+                and v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="vehicleIdList != null and depIdList != null">
+                and (v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                or v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+        </where>
+        ) c1
+        GROUP BY plateNo,NAME
+        ORDER BY COUNT(1) ${ORDERTYPE} )
+        d1 WHERE d1.plateNo IS NOT NULL AND name is not null
+    </select>
+
+    <!--报警统计，根据机构和报警时间-->
+    <select id="selectalarmbydepandtime" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        select * from ( SELECT NAME,DATE_FORMAT(lastTime,'%Y-%m-%d') TIME ,COUNT(1) cn FROM ( SELECT
+        d.`name`,a.lastTime FROM
+        gps_hisdata.alarm_summary a LEFT JOIN
+        vehicle v ON a.vehicleid=v.vehicleid LEFT JOIN department d ON v.depId= d.`depId`
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on v.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on v.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+
+        <where>
+            <![CDATA[   	AND  a.`firstTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -10 DAY)  ]]>
+            <![CDATA[   	AND  a.`firstTime` <  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL 1 DAY)  ]]>
+            <if test="datetime != 0">
+                <![CDATA[   	AND  a.`lastTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -${datetime} DAY)  ]]>
+            </if>
+            <if test="depIdList != null and vehicleIdList == null and userId == null">
+                and v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vehicleIdList != null and depIdList == null and userId == null">
+                and v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="vehicleIdList != null and depIdList != null">
+                and (v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                or v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+        </where>
+        ) c1 where name is not null
+        GROUP BY NAME,DATE_FORMAT(lastTime,'%Y-%m-%d') ) d2 ORDER BY d2.TIME DESC ,cn desc
+    </select>
+
+    <!--报警类型分布-->
+    <select id="selectcountbyadasalarm" parameterType="java.util.HashMap"
+            resultType="java.util.HashMap">
+        select * from ( select b.alarmType,b.name,ed2.cn from (
+        SELECT a.alarmSource,a.alarmType,COUNT(*) cn FROM gps_hisdata.alarm_summary a ,vehicle v
+        <if test="depIdList != null and vehicleIdList == null and userId !=null">
+            inner join userdepartment u on v.depId =u.depId and u.userid=#{userId}
+        </if>
+        <if test="vehicleIdList != null and depIdList == null  and userId !=null">
+            inner join  user_vehicle_ref u on v.vehicleId =u.vehicle_id and u.user_id=#{userId}
+        </if>
+
+        <where>
+            a.`vehicleId`=v.`vehicleId`
+            <![CDATA[   	AND  a.`firstTime` >=  	 date_add(date_format(now(), '%Y-%m-%d'),INTERVAL -10 DAY)  ]]>
+
+            <if test="startTime != null ">
+                and a.lastTime >= #{startTime}
+            </if>
+            <if test="endTime != null ">
+                and <![CDATA[a.lastTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+                and <![CDATA[a.firstTime < date_add(#{endTime},INTERVAL 1 DAY)]]>
+            </if>
+            <if test="depIdList != null and vehicleIdList == null and userId == null">
+                and v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="vehicleIdList != null and depIdList == null and userId == null">
+                and v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="vehicleIdList != null and depIdList != null">
+                and (v.depId in
+                <foreach
+                        collection="depIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                or v.vehicleId in
+                <foreach
+                        collection="vehicleIdList" index="index" item="item"
+                        open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                )
+            </if>
+
+        </where>
+
+        GROUP BY a.alarmType,
+        a.alarmSource )
+        ed2 left join AlarmConfig b on ed2.alarmType=b.alarmType
+        AND ed2.alarmSource = b.alarmSource ORDER BY ed2.cn DESC ) d3 where name is not null
+    </select>
+
+</mapper>

@@ -1,0 +1,71 @@
+fxft:
+  jdbc:
+    debug: true
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  profiles:
+    active: dev
+  datasource:
+    dynamic:
+      primary: db1
+      datasource:
+        db1:
+          driver-class-name: com.mysql.jdbc.Driver
+          url: jdbc:mysql://172.16.8.96:3306/subiaodb?autoReconnect=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useSSL=false
+          username: ascs
+          password: 96bcnJ6ifCz7NBHpjhB1ZA45
+        db2:
+          driver-class-name: com.mysql.jdbc.Driver
+          url: jdbc:mysql://172.16.15.95:61502/subiaodb?autoReconnect=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useSSL=false
+          username: ascs
+          password: 96bcnJ6ifCz7NBHpjhB1ZA45
+      type: com.alibaba.druid.pool.DruidDataSource
+      druid:
+        initial-size: 10
+        max-active: 100
+        min-idle: 10
+        max-wait: 60000
+        pool-prepared-statements: true
+        max-pool-prepared-statement-per-connection-size: 20
+        time-between-eviction-runs-millis: 60000
+        min-evictable-idle-time-millis: 300000
+        #Oracle需要打开注释
+        #validation-query: SELECT 1 FROM DUAL
+        test-while-idle: true
+        test-on-borrow: false
+        test-on-return: false
+        stat-view-servlet:
+          enabled: true
+          url-pattern: /druid/*
+          #login-username: admin
+          #login-password: admin
+        filter:
+          stat:
+            log-slow-sql: true
+            slow-sql-millis: 1000
+            merge-sql: false
+          wall:
+            config:
+              multi-statement-allow: true
+#  datasource:
+#    driver-class-name: com.mysql.jdbc.Driver
+#    password: 96bcnJ6ifCz7NBHpjhB1ZA45
+#    username: ascs
+#    url: jdbc:mysql://172.16.8.96:3306/subiaodb?autoReconnect=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&rewriteBatchedStatements=true&useSSL=false
+server:
+  port: 8969
+mybatis-plus:
+  #typeAliasesPackage: com.hzz.mybatisplusdemo
+  configuration:
+#    日志打印位置，这边是直接打印到控制台
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    cache-enabled: false
+#    这边是关闭二级缓存，二级缓存的概念是对应mapper类的
+    map-underscore-to-camel-case: false
+#    这边是关闭一级缓存
+    local-cache-scope: STATEMENT
